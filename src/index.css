@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Women's Clothing Store Inventory - Clean Rose Theme */
+
+@layer base {
+  :root {
+    --background: 0 0% 99%;
+    --foreground: 240 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+
+    --primary: 346 77% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 346 30% 96%;
+    --secondary-foreground: 346 50% 30%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 45%;
+
+    --accent: 346 77% 95%;
+    --accent-foreground: 346 77% 40%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 346 77% 50%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 346 77% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 346 30% 96%;
+    --sidebar-accent-foreground: 346 50% 30%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 346 77% 50%;
+  }
+
+  .dark {
+    --background: 240 10% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 240 10% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 10% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 346 77% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 346 30% 15%;
+    --secondary-foreground: 346 30% 85%;
+
+    --muted: 240 5% 18%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 346 50% 18%;
+    --accent-foreground: 346 50% 85%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 70% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 240 5% 20%;
+    --input: 240 5% 20%;
+    --ring: 346 77% 55%;
+
+    --sidebar-background: 240 10% 8%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 346 77% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 346 30% 15%;
+    --sidebar-accent-foreground: 346 30% 85%;
+    --sidebar-border: 240 5% 20%;
+    --sidebar-ring: 346 77% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
