@@ -5,6 +5,7 @@ import { StockMovementForm } from '@/components/StockMovementForm';
 import { InventoryTable } from '@/components/InventoryTable';
 import { MovementHistory } from '@/components/MovementHistory';
 import { StatsCards } from '@/components/StatsCards';
+import { UserMenu } from '@/components/UserMenu';
 import { Shirt } from 'lucide-react';
 
 const Index = () => {
@@ -12,14 +13,17 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary rounded-lg">
-              <Shirt className="h-6 w-6 text-primary-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary rounded-lg">
+                <Shirt className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Inventory Manager</h1>
+                <p className="text-sm text-muted-foreground">Women's Clothing Store</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold">Inventory Manager</h1>
-              <p className="text-sm text-muted-foreground">Women's Clothing Store</p>
-            </div>
+            <UserMenu />
           </div>
         </div>
       </header>
