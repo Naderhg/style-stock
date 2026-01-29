@@ -31,15 +31,45 @@ export function useInventory() {
   });
 }
 
-export function useStockMovements() {
+export function useStockMovements(filters?: {
+  movementType?: string;
+  productId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  notes?: string;
+}) {
   return useQuery({
-    queryKey: ['stock_movements'],
+    queryKey: ['stock_movements', filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('stock_movements')
         .select('*, inventory(*, products(*))')
-        .order('movement_date', { ascending: false })
-        .limit(50);
+        .order('movement_date', { ascending: false });
+
+      // Apply filters
+      if (filters?.movementType && filters.movementType !== 'all') {
+        query = query.eq('movement_type', filters.movementType);
+      }
+
+      if (filters?.productId && filters.productId !== 'all') {
+        query = query.eq('inventory.product_id', filters.productId);
+      }
+
+      if (filters?.dateFrom) {
+        query = query.gte('movement_date', new Date(filters.dateFrom).toISOString());
+      }
+
+      if (filters?.dateTo) {
+        const endDate = new Date(filters.dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        query = query.lte('movement_date', endDate.toISOString());
+      }
+
+      if (filters?.notes) {
+        query = query.ilike('notes', `%${filters.notes}%`);
+      }
+
+      const { data, error } = await query.limit(100);
       if (error) throw error;
       return data as StockMovement[];
     },
@@ -96,62 +126,64 @@ export function useStockMovement() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ 
-      inventory_id, 
-      quantity, 
-      movement_type, 
-      notes 
-    }: { 
+    mutationFn: async (movements: Array<{ 
       inventory_id: string; 
       quantity: number; 
       movement_type: 'IN' | 'OUT';
       notes?: string;
-    }) => {
-      // First, get current inventory
-      const { data: currentInventory, error: fetchError } = await supabase
-        .from('inventory')
-        .select('quantity')
-        .eq('id', inventory_id)
-        .single();
+    }>) => {
+      const results = [];
       
-      if (fetchError) throw fetchError;
-      
-      const newQuantity = movement_type === 'IN' 
-        ? currentInventory.quantity + quantity 
-        : currentInventory.quantity - quantity;
-      
-      if (newQuantity < 0) {
-        throw new Error('Insufficient stock');
+      for (const movement of movements) {
+        // First, get current inventory
+        const { data: currentInventory, error: fetchError } = await supabase
+          .from('inventory')
+          .select('quantity')
+          .eq('id', movement.inventory_id)
+          .single();
+        
+        if (fetchError) throw fetchError;
+        
+        const newQuantity = movement.movement_type === 'IN' 
+          ? currentInventory.quantity + movement.quantity 
+          : currentInventory.quantity - movement.quantity;
+        
+        if (newQuantity < 0) {
+          throw new Error(`Insufficient stock for item ${movement.inventory_id}`);
+        }
+        
+        // Update inventory quantity
+        const { error: updateError } = await supabase
+          .from('inventory')
+          .update({ quantity: newQuantity })
+          .eq('id', movement.inventory_id);
+        
+        if (updateError) throw updateError;
+        
+        // Record the movement
+        const { data, error: movementError } = await supabase
+          .from('stock_movements')
+          .insert({ 
+            inventory_id: movement.inventory_id, 
+            quantity: movement.quantity, 
+            movement_type: movement.movement_type,
+            notes: movement.notes || null,
+            movement_date: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        if (movementError) throw movementError;
+        results.push(data);
       }
       
-      // Update inventory quantity
-      const { error: updateError } = await supabase
-        .from('inventory')
-        .update({ quantity: newQuantity })
-        .eq('id', inventory_id);
-      
-      if (updateError) throw updateError;
-      
-      // Record the movement
-      const { data, error: movementError } = await supabase
-        .from('stock_movements')
-        .insert({ 
-          inventory_id, 
-          quantity, 
-          movement_type,
-          notes: notes || null,
-          movement_date: new Date().toISOString()
-        })
-        .select()
-        .single();
-      
-      if (movementError) throw movementError;
-      return data;
+      return results;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['stock_movements'] });
-      toast.success(`Stock ${variables.movement_type === 'IN' ? 'added' : 'removed'} successfully`);
+      const movementType = variables[0]?.movement_type;
+      toast.success(`${variables.length} stock ${movementType === 'IN' ? 'additions' : 'removals'} processed successfully`);
     },
     onError: (error: Error) => {
       toast.error(error.message);

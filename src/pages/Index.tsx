@@ -6,8 +6,9 @@ import { InventoryTable } from '@/components/InventoryTable';
 import { MovementHistory } from '@/components/MovementHistory';
 import { StatsCards } from '@/components/StatsCards';
 import { ReportPage } from '@/components/ReportPage';
+import { AnalysisPage } from '@/components/AnalysisPage';
 import { UserMenu } from '@/components/UserMenu';
-import { Shirt, FileText } from 'lucide-react';
+import { Shirt, FileText, BarChart3 } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -33,10 +34,11 @@ const Index = () => {
         <StatsCards />
         
         <Tabs defaultValue="stock" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-xl">
+          <TabsList className="grid w-full grid-cols-6 max-w-2xl">
             <TabsTrigger value="stock">Stock</TabsTrigger>
             <TabsTrigger value="movement">IN / OUT</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
@@ -56,6 +58,10 @@ const Index = () => {
               <AddProductForm />
               <AddColorForm />
             </div>
+          </TabsContent>
+          
+          <TabsContent value="analysis" className="space-y-6">
+            <AnalysisPage />
           </TabsContent>
           
           <TabsContent value="reports" className="space-y-6">
