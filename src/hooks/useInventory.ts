@@ -37,21 +37,31 @@ export function useStockMovements(filters?: {
   dateFrom?: string;
   dateTo?: string;
   notes?: string;
+  page?: number;
+  limit?: number;
 }) {
   return useQuery({
     queryKey: ['stock_movements', filters],
     queryFn: async () => {
+      const page = filters?.page || 1;
+      const limit = filters?.limit || 50;
+      const offset = (page - 1) * limit;
+
+      console.log('useStockMovements filters:', filters);
+
       let query = supabase
         .from('stock_movements')
-        .select('*, inventory(*, products(*))')
+        .select('*, inventory!inner(*, products(*))', { count: 'exact' })
         .order('movement_date', { ascending: false });
 
       // Apply filters
       if (filters?.movementType && filters.movementType !== 'all') {
+        console.log('Applying movementType filter:', filters.movementType);
         query = query.eq('movement_type', filters.movementType);
       }
 
       if (filters?.productId && filters.productId !== 'all') {
+        console.log('Applying productId filter:', filters.productId);
         query = query.eq('inventory.product_id', filters.productId);
       }
 
@@ -69,9 +79,18 @@ export function useStockMovements(filters?: {
         query = query.ilike('notes', `%${filters.notes}%`);
       }
 
-      const { data, error } = await query.limit(100);
+      const { data, error, count } = await query
+        .range(offset, offset + limit - 1);
+      
+      console.log('Query result:', { data: data?.length, totalCount: count, error });
+      
       if (error) throw error;
-      return data as StockMovement[];
+      return {
+        data: data as StockMovement[],
+        totalCount: count || 0,
+        currentPage: page,
+        totalPages: Math.ceil((count || 0) / limit)
+      };
     },
   });
 }

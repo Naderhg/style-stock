@@ -6,6 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { useStockMovements, useProducts } from '@/hooks/useInventory';
 import { History, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
@@ -16,14 +25,25 @@ export function MovementHistory() {
     productId: 'all',
     dateFrom: '',
     dateTo: '',
-    notes: ''
+    notes: '',
+    page: 1,
+    limit: 50
   });
 
-  const { data: movements, isLoading } = useStockMovements(filters);
+  const { data: movementsData, isLoading } = useStockMovements(filters);
   const { data: products } = useProducts();
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const handleFilterChange = (key: string, value: string | number) => {
+    // Reset to page 1 when any filter except page changes
+    if (key !== 'page') {
+      setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    handleFilterChange('page', page);
   };
 
   const clearFilters = () => {
@@ -32,11 +52,15 @@ export function MovementHistory() {
       productId: 'all',
       dateFrom: '',
       dateTo: '',
-      notes: ''
+      notes: '',
+      page: 1,
+      limit: 50
     });
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== 'all' && value !== '');
+  const hasActiveFilters = Object.values(filters).some(value => 
+    value !== 'all' && value !== '' && value !== 1 && value !== 50
+  );
 
   return (
     <Card className="animate-fade-in">
@@ -132,52 +156,112 @@ export function MovementHistory() {
         </div>
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">Loading...</div>
-        ) : movements?.length === 0 ? (
+        ) : movementsData?.data?.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No stock movements yet.
           </div>
         ) : (
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Date</TableHead>
-                  <TableHead className="font-semibold">Type</TableHead>
-                  <TableHead className="font-semibold">Product</TableHead>
-                  <TableHead className="font-semibold">Color</TableHead>
-                  <TableHead className="font-semibold text-right">Qty</TableHead>
-                  <TableHead className="font-semibold">Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {movements?.map((movement) => (
-                  <TableRow key={movement.id} className="hover:bg-muted/30">
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(movement.movement_date), 'MMM d, yyyy HH:mm')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={movement.movement_type === 'IN' ? 'default' : 'destructive'}
-                        className="font-mono"
-                      >
-                        {movement.movement_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {movement.inventory?.products?.sku}
-                    </TableCell>
-                    <TableCell>{movement.inventory?.color}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {movement.movement_type === 'IN' ? '+' : '-'}{movement.quantity}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {movement.notes || '—'}
-                    </TableCell>
+          <>
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Date</TableHead>
+                    <TableHead className="font-semibold">Type</TableHead>
+                    <TableHead className="font-semibold">Product</TableHead>
+                    <TableHead className="font-semibold">Color</TableHead>
+                    <TableHead className="font-semibold text-right">Qty</TableHead>
+                    <TableHead className="font-semibold">Notes</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {movementsData?.data?.map((movement) => (
+                    <TableRow key={movement.id} className="hover:bg-muted/30">
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(movement.movement_date), 'MMM d, yyyy HH:mm')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={movement.movement_type === 'IN' ? 'default' : 'destructive'}
+                          className="font-mono"
+                        >
+                          {movement.movement_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {movement.inventory?.products?.sku}
+                      </TableCell>
+                      <TableCell>{movement.inventory?.color}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {movement.movement_type === 'IN' ? '+' : '-'}{movement.quantity}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {movement.notes || '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {movementsData && movementsData.totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((movementsData.currentPage - 1) * movementsData.limit) + 1} to{' '}
+                  {Math.min(movementsData.currentPage * movementsData.limit, movementsData.totalCount)} of{' '}
+                  {movementsData.totalCount} results
+                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(movementsData.currentPage - 1)}
+                        className={movementsData.currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: movementsData.totalPages }, (_, i) => i + 1).map((page) => {
+                      if (
+                        page === 1 || 
+                        page === movementsData.totalPages || 
+                        (page >= movementsData.currentPage - 1 && page <= movementsData.currentPage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(page)}
+                              isActive={page === movementsData.currentPage}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (
+                        page === movementsData.currentPage - 2 || 
+                        page === movementsData.currentPage + 2
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => handlePageChange(movementsData.currentPage + 1)}
+                        className={movementsData.currentPage === movementsData.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
