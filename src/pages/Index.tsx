@@ -34,13 +34,13 @@ const Index = () => {
         <StatsCards />
         
         <Tabs defaultValue="stock" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 max-w-2xl">
-            <TabsTrigger value="stock">Stock</TabsTrigger>
-            <TabsTrigger value="movement">IN / OUT</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="analysis">Analysis</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1 p-1">
+            <TabsTrigger value="stock" className="text-xs sm:text-sm">Stock</TabsTrigger>
+            <TabsTrigger value="movement" className="text-xs sm:text-sm">IN / OUT</TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm">Products</TabsTrigger>
+            <TabsTrigger value="analysis" className="text-xs sm:text-sm">Analysis</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
           </TabsList>
           
           <TabsContent value="stock" className="space-y-6">
@@ -48,13 +48,13 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="movement" className="space-y-6">
-            <div className="max-w-xl">
+            <div className="max-w-full lg:max-w-xl">
               <StockMovementForm />
             </div>
           </TabsContent>
           
           <TabsContent value="products" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AddProductForm />
               <AddColorForm />
             </div>
